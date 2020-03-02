@@ -2,6 +2,8 @@
 
 A Visual Studio 2019 solution written in C# to demonstrate generating a Word document (docx) using OpenXML.
 
+For this solution to work, it is necessary to add WindowsBase and DocumentFormat.OpenXml references to project.
+
 ### Running
 
 1. Download the solution from our GitHub repository
