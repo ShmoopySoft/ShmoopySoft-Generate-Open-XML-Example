@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("ShmoopySoft Generate Open XML Example")]
-[assembly: AssemblyDescription("An example Visual Studio project to create our first GitHub repository :-)")]
+[assembly: AssemblyDescription("Generates Word documents and Excel spreadsheets using the Open XML SDK.")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("ShmoopySoft (Pty) Ltd")]
 [assembly: AssemblyProduct("ShmoopySoft Generate Open XML Example")]
