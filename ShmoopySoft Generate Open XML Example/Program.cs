@@ -366,7 +366,7 @@ namespace ShmoopySoft_Generate_Open_XML_Example
                 if (sheets.Elements<DocumentFormat.OpenXml.Spreadsheet.Sheet>().Count() > 0)
                 {
                     sheetId =
-                        sheets.Elements<DocumentFormat.OpenXml.Spreadsheet.Sheet>().Select(s => s.SheetId.Value).Max() + 1;
+                        sheets.Elements<DocumentFormat.OpenXml.Spreadsheet.Sheet>().Max(s => s.SheetId.Value) + 1;
                 }
 
                 DocumentFormat.OpenXml.Spreadsheet.Sheet sheet =
@@ -376,12 +376,8 @@ namespace ShmoopySoft_Generate_Open_XML_Example
 
                 DocumentFormat.OpenXml.Spreadsheet.Row headerRow = new DocumentFormat.OpenXml.Spreadsheet.Row();
 
-                List<string> columns = new List<string>();
-
                 foreach (DataColumn column in dataTable.Columns)
                 {
-                    columns.Add(column.ColumnName);
-
                     DocumentFormat.OpenXml.Spreadsheet.Cell cell = new DocumentFormat.OpenXml.Spreadsheet.Cell
                     {
                         DataType = DocumentFormat.OpenXml.Spreadsheet.CellValues.String,
@@ -395,11 +391,15 @@ namespace ShmoopySoft_Generate_Open_XML_Example
                 foreach (DataRow dsrow in dataTable.Rows)
                 {
                     DocumentFormat.OpenXml.Spreadsheet.Row newRow = new DocumentFormat.OpenXml.Spreadsheet.Row();
-                    foreach (String col in columns)
+
+                    for (int i = 0; i < dataTable.Columns.Count; i++)
                     {
-                        DocumentFormat.OpenXml.Spreadsheet.Cell cell = new DocumentFormat.OpenXml.Spreadsheet.Cell();
-                        cell.DataType = DocumentFormat.OpenXml.Spreadsheet.CellValues.String;
-                        cell.CellValue = new DocumentFormat.OpenXml.Spreadsheet.CellValue(dsrow[col].ToString());
+                        DocumentFormat.OpenXml.Spreadsheet.Cell cell = new DocumentFormat.OpenXml.Spreadsheet.Cell
+                        {
+                            DataType = DocumentFormat.OpenXml.Spreadsheet.CellValues.String,
+                            CellValue = new DocumentFormat.OpenXml.Spreadsheet.CellValue(dsrow[i].ToString())
+                        };
+
                         newRow.AppendChild(cell);
                     }
 
