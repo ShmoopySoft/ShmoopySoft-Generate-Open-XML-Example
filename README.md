@@ -2,11 +2,13 @@
 
 A Visual Studio 2019 solution written in C# to demonstrate generating a Word document (docx) using OpenXML.
 
+For this solution to work, it is necessary to add WindowsBase and DocumentFormat.OpenXml references to project.
+
 ### Running
 
 1. Download the solution from our GitHub repository
 2. Open the solution in Visual Studio 2019
-3. Install the OpenXML NuGet Package: Install-Package DocumentFormat.OpenXml -Version 2.10.1
+3. Install the Open XML SDK NuGet Package: Install-Package DocumentFormat.OpenXml -Version 2.10.1
 4. Click the Start button, or press F5
 
 ## License
