@@ -1,6 +1,6 @@
 # ShmoopySoft Generate Open XML Example
 
-A Visual Studio 2019 solution written in C# to demonstrate generating a Word document (docx) using OpenXML.
+A Visual Studio 2019 solution written in C# to demonstrate generating a Word document (docx) and an Excel spreadsheet (xlsx) using the Open XML SDK.
 
 For this solution to work, it is necessary to add WindowsBase and DocumentFormat.OpenXml references to project.
 
