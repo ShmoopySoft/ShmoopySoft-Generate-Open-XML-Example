@@ -23,7 +23,9 @@ using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 using System;
+using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 
 namespace ShmoopySoft_Generate_Open_XML_Example
 {
@@ -42,7 +44,8 @@ namespace ShmoopySoft_Generate_Open_XML_Example
             //// String variables to store Report properties
             string myReportName = "My Report";
             string myReportBlurb = "This is an example to show how easy it is to create a Word document using C# and OpenXML.";
-            string reportFilename = @"C:\Temp\My Report.docx";
+            string reportWordFilename = @"C:\Temp\My Report.docx";
+            string reportExcelFilename = @"C:\Temp\My Report.xlsx";
 
             //// Create a sample Report DataTable to export
             DataTable reportDataTable = new DataTable();
@@ -66,17 +69,21 @@ namespace ShmoopySoft_Generate_Open_XML_Example
             try
             {
                 //// Generate the Word Document
-                ExportReportToWord(reportFilename, myReportName, myReportBlurb, reportDataTable);
+                ExportReportToWord(reportWordFilename, myReportName, myReportBlurb, reportDataTable);
+
+                //// Generate the Excel Spreadsheet
+                ExportDataTableToExcel(reportDataTable, reportExcelFilename);
 
                 // Display a confirmation.
-                Console.WriteLine("The report was successfully generated :-)");
+                Console.WriteLine("The reports were successfully generated :-)");
                 Console.Write(Environment.NewLine);
-                Console.WriteLine("Report filename: " + reportFilename);
+                Console.WriteLine("Word Report filename: " + reportWordFilename);
+                Console.WriteLine("Excel Report filename: " + reportExcelFilename);
             }
             catch (Exception ex)
             {
                 // Display an error.
-                Console.WriteLine("Failed to generate the report :-(");
+                Console.WriteLine("Failed to generate the reports :-(");
                 Console.Write(Environment.NewLine);
                 Console.WriteLine(ex.ToString());
             }
@@ -90,8 +97,8 @@ namespace ShmoopySoft_Generate_Open_XML_Example
         /// Convert a DataTable to a word processing Table to insert into a document.
         /// </summary>
         /// <param name="dataTable"></param>
-        /// <returns></returns>
-        public static Table ConvertDataTableToOpenXmlTable(DataTable dataTable)
+        /// <returns>The Table</returns>
+        public static Table ConvertDataTableToWordTable(DataTable dataTable)
         {
             //// Create a new table
             Table table = new Table();
@@ -286,7 +293,7 @@ namespace ShmoopySoft_Generate_Open_XML_Example
         /// <summary>
         /// Exports an example report to Word (docx) format.
         /// </summary>
-        /// <param name="reportPath">The full path to the docx file to create</param>
+        /// <param name="reportPath">The full path and filename of the docx file to create</param>
         /// <param name="reportName">The name (heading) of the report</param>
         /// <param name="reportBlurb">A blurb (paragraph) of the report</param>
         /// <param name="reportData">A DataTable to convert to a table and insert into the document</param>
@@ -310,7 +317,7 @@ namespace ShmoopySoft_Generate_Open_XML_Example
                 if (reportData.Rows.Count > 0)
                 {
                     //// Add a table to the body
-                    body.AppendChild(ConvertDataTableToOpenXmlTable(reportData));
+                    body.AppendChild(ConvertDataTableToWordTable(reportData));
 
                     //// Add a paragraph to the body
                     body.Append(CreateOpenXmlParagraph(" ", 14));
@@ -323,6 +330,81 @@ namespace ShmoopySoft_Generate_Open_XML_Example
 
                 //// Save the document
                 mainDocumentPart.Document.Save();
+            }
+        }
+
+        /// <summary>
+        /// Exports a DataTable to an Excel (xlsx) spreadsheet format.
+        /// </summary>
+        /// <param name="dataTable">The DataTable to convert</param>
+        /// <param name="excelPath">The full path and filename of the Excel spreadsheet to create</param>
+        public static void ExportDataTableToExcel(DataTable dataTable, string excelPath)
+        {
+            using (var workbook = SpreadsheetDocument.Create(excelPath, SpreadsheetDocumentType.Workbook))
+            {
+                //// Add a new WorkbookPart
+                var workbookPart = workbook.AddWorkbookPart();
+
+                //// Add a new Workbook
+                workbook.WorkbookPart.Workbook = new DocumentFormat.OpenXml.Spreadsheet.Workbook
+                {
+                    Sheets = new DocumentFormat.OpenXml.Spreadsheet.Sheets()
+                };
+
+                var sheetPart = workbook.WorkbookPart.AddNewPart<WorksheetPart>();
+                var sheetData = new DocumentFormat.OpenXml.Spreadsheet.SheetData();
+
+                sheetPart.Worksheet = new DocumentFormat.OpenXml.Spreadsheet.Worksheet(sheetData);
+
+                DocumentFormat.OpenXml.Spreadsheet.Sheets sheets = 
+                    workbook.WorkbookPart.Workbook.GetFirstChild<DocumentFormat.OpenXml.Spreadsheet.Sheets>();
+
+                string relationshipId = workbook.WorkbookPart.GetIdOfPart(sheetPart);
+
+                uint sheetId = 1;
+
+                if (sheets.Elements<DocumentFormat.OpenXml.Spreadsheet.Sheet>().Count() > 0)
+                {
+                    sheetId =
+                        sheets.Elements<DocumentFormat.OpenXml.Spreadsheet.Sheet>().Select(s => s.SheetId.Value).Max() + 1;
+                }
+
+                DocumentFormat.OpenXml.Spreadsheet.Sheet sheet =
+                    new DocumentFormat.OpenXml.Spreadsheet.Sheet() { Id = relationshipId, SheetId = sheetId, Name = dataTable.TableName };
+
+                sheets.Append(sheet);
+
+                DocumentFormat.OpenXml.Spreadsheet.Row headerRow = new DocumentFormat.OpenXml.Spreadsheet.Row();
+
+                List<string> columns = new List<string>();
+
+                foreach (DataColumn column in dataTable.Columns)
+                {
+                    columns.Add(column.ColumnName);
+
+                    DocumentFormat.OpenXml.Spreadsheet.Cell cell = new DocumentFormat.OpenXml.Spreadsheet.Cell
+                    {
+                        DataType = DocumentFormat.OpenXml.Spreadsheet.CellValues.String,
+                        CellValue = new DocumentFormat.OpenXml.Spreadsheet.CellValue(column.ColumnName)
+                    };
+                    headerRow.AppendChild(cell);
+                }
+
+                sheetData.AppendChild(headerRow);
+
+                foreach (DataRow dsrow in dataTable.Rows)
+                {
+                    DocumentFormat.OpenXml.Spreadsheet.Row newRow = new DocumentFormat.OpenXml.Spreadsheet.Row();
+                    foreach (String col in columns)
+                    {
+                        DocumentFormat.OpenXml.Spreadsheet.Cell cell = new DocumentFormat.OpenXml.Spreadsheet.Cell();
+                        cell.DataType = DocumentFormat.OpenXml.Spreadsheet.CellValues.String;
+                        cell.CellValue = new DocumentFormat.OpenXml.Spreadsheet.CellValue(dsrow[col].ToString());
+                        newRow.AppendChild(cell);
+                    }
+
+                    sheetData.AppendChild(newRow);
+                }
             }
         }
     }
